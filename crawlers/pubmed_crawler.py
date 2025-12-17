@@ -24,7 +24,7 @@ class PubMedCrawler:
         }
         
         try:
-            time.sleep(1)  # Be nice to the server
+            time.sleep(1)
             response = requests.get(
                 self.BASE_URL + "esearch.fcgi",
                 params=params,
@@ -45,7 +45,6 @@ class PubMedCrawler:
         
         print(f"[PubMed] Fetching {len(id_list)} article details...")
         
-        # Batch into groups of 50 to avoid timeout
         all_leads = []
         batch_size = 50
         
@@ -76,7 +75,6 @@ class PubMedCrawler:
         return all_leads
     
     def _parse_xml(self, xml_text):
-        """Parse PubMed XML and extract author information"""
         leads = []
         
         try:
@@ -93,20 +91,13 @@ class PubMedCrawler:
         return leads
     
     def _extract_lead(self, article):
-        """Extract lead info from single article"""
-        
-        # Article title
         title = article.findtext(".//ArticleTitle", default="")
-        
-        # Publication year
         year = self._get_year(article)
         
-        # Get corresponding/first author
         authors = article.findall(".//Author")
         if not authors:
             return None
         
-        # Try to find author with affiliation (often corresponding author)
         chosen_author = None
         author_email = ""
         affiliation = ""
@@ -118,7 +109,6 @@ class PubMedCrawler:
                 if aff_text:
                     chosen_author = author
                     affiliation = aff_text
-                    # Try to extract email from affiliation
                     email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', aff_text)
                     if email_match:
                         author_email = email_match.group()
@@ -130,7 +120,6 @@ class PubMedCrawler:
             if aff_info is not None:
                 affiliation = aff_info.findtext("Affiliation", default="")
         
-        # Get name
         last_name = chosen_author.findtext("LastName", default="")
         fore_name = chosen_author.findtext("ForeName", default="")
         name = f"{fore_name} {last_name}".strip()
@@ -141,10 +130,7 @@ class PubMedCrawler:
         if not name:
             return None
         
-        # Parse affiliation for company and location
         company, person_location, company_hq = self._parse_affiliation(affiliation)
-        
-        # Check for in-vitro keywords
         uses_invitro = self._check_invitro(title + " " + affiliation)
         
         return {
@@ -154,7 +140,7 @@ class PubMedCrawler:
             "person_location": person_location,
             "company_hq": company_hq,
             "funding_stage": "Unknown",
-            "publication_topic": title[:200],  # Truncate long titles
+            "publication_topic": title[:200],
             "publication_year": year,
             "uses_invitro": "Yes" if uses_invitro else "No",
             "email": author_email,
@@ -164,7 +150,6 @@ class PubMedCrawler:
         }
     
     def _get_year(self, article):
-        """Extract publication year"""
         pub_date = article.find(".//PubDate")
         if pub_date is not None:
             year = pub_date.findtext("Year")
@@ -176,11 +161,9 @@ class PubMedCrawler:
         return ""
     
     def _parse_affiliation(self, affiliation):
-        """Parse affiliation string into company, location"""
         if not affiliation:
             return "Unknown", "", ""
         
-        # Split by comma
         parts = [p.strip() for p in affiliation.split(",") if p.strip()]
         
         if len(parts) >= 3:
@@ -200,13 +183,11 @@ class PubMedCrawler:
             person_location = ""
             company_hq = ""
         
-        # Clean up
-        company = company[:100]  # Truncate long company names
+        company = company[:100]
         
         return company, person_location, company_hq
     
     def _check_invitro(self, text):
-        """Check if text mentions in-vitro/3D methods"""
         if not text:
             return False
         text_lower = text.lower()
@@ -215,30 +196,14 @@ class PubMedCrawler:
         return any(kw in text_lower for kw in keywords)
     
     def crawl(self, keywords, max_results=50):
-        """Main crawl method"""
-        
-        # Build search query
-        query_parts = [f'"{kw}"[Title/Abstract]' for kw in keywords[:5]]  # Limit keywords
+        query_parts = [f'"{kw}"[Title/Abstract]' for kw in keywords[:5]]
         query = " OR ".join(query_parts)
         
-        # Add date filter (last 3 years)
         current_year = datetime.now().year
         query += f" AND {current_year-2}:{current_year}[pdat]"
         
-        # Search and fetch
         id_list = self.search(query, max_results)
         self.leads = self.fetch_details(id_list)
         
         print(f"[PubMed] ✓ Extracted {len(self.leads)} leads")
         return self.leads
-
-
-# Test
-if __name__ == "__main__":
-    crawler = PubMedCrawler(email="test@test.com")
-    keywords = ["drug-induced liver injury", "hepatotoxicity in vitro"]
-    leads = crawler.crawl(keywords, max_results=10)
-    
-    print(f"\nFound {len(leads)} leads:")
-    for lead in leads[:3]:
-        print(f"  - {lead['name']} at {lead['company']}")

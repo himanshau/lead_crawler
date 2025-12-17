@@ -1,22 +1,14 @@
-"""
-NIH RePORTER Crawler - 100% FREE, NO API KEY REQUIRED
-Uses public NIH RePORTER API v2
-"""
-
 import requests
 from datetime import datetime
 import time
 
 class NIHReporterCrawler:
-    """Crawls NIH RePORTER for grant recipients (Principal Investigators)"""
-    
     API_URL = "https://api.reporter.nih.gov/v2/projects/search"
     
     def __init__(self):
         self.leads = []
     
     def search(self, query, max_results=50):
-        """Search NIH RePORTER for grants"""
         print(f"[NIH] Searching: {query[:80]}...")
         
         current_year = datetime.now().year
@@ -73,9 +65,6 @@ class NIHReporterCrawler:
             return []
     
     def _extract_lead(self, grant):
-        """Extract lead from grant record"""
-        
-        # Get PI name
         name = grant.get("contact_pi_name", "")
         
         if not name:
@@ -89,7 +78,6 @@ class NIHReporterCrawler:
         if not name:
             return None
         
-        # Organization info
         company = grant.get("org_name", "Unknown")
         city = grant.get("org_city", "")
         state = grant.get("org_state", "")
@@ -98,10 +86,8 @@ class NIHReporterCrawler:
         person_location = f"{city}, {state}".strip(", ")
         company_hq = f"{city}, {state}, {country}".strip(", ")
         
-        # Project info
         project_title = grant.get("project_title", "")
         
-        # Year
         start_date = grant.get("project_start_date", "")
         year = ""
         if start_date:
@@ -110,7 +96,6 @@ class NIHReporterCrawler:
             except:
                 pass
         
-        # Check for in-vitro
         terms = grant.get("terms", "") or ""
         full_text = f"{project_title} {terms}".lower()
         invitro_keywords = ["3d", "in vitro", "organ-on-chip", "spheroid", "organoid"]
@@ -133,15 +118,10 @@ class NIHReporterCrawler:
         }
     
     def crawl(self, keywords, max_results=50):
-        """Main crawl method"""
-        
-        # Build query
         query = " OR ".join([f'"{kw}"' for kw in keywords[:5]])
         
-        # Search
         results = self.search(query, max_results)
         
-        # Extract leads
         self.leads = []
         for grant in results:
             lead = self._extract_lead(grant)
@@ -150,14 +130,3 @@ class NIHReporterCrawler:
         
         print(f"[NIH] ✓ Extracted {len(self.leads)} leads")
         return self.leads
-
-
-# Test
-if __name__ == "__main__":
-    crawler = NIHReporterCrawler()
-    keywords = ["drug-induced liver injury", "hepatotoxicity"]
-    leads = crawler.crawl(keywords, max_results=10)
-    
-    print(f"\nFound {len(leads)} leads:")
-    for lead in leads[:3]:
-        print(f"  - {lead['name']} at {lead['company']}")

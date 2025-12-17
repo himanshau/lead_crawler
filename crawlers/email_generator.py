@@ -1,14 +1,6 @@
-"""
-Email Generator - Generates probable email addresses
-NO API KEY REQUIRED - uses pattern matching
-"""
-
 import re
 
 class EmailGenerator:
-    """Generates probable email addresses from name and company"""
-    
-    # Common email patterns
     PATTERNS = [
         "{first}.{last}@{domain}",
         "{first}{last}@{domain}",
@@ -18,7 +10,6 @@ class EmailGenerator:
         "{f}.{last}@{domain}"
     ]
     
-    # Known company domains
     KNOWN_DOMAINS = {
         "pfizer": "pfizer.com",
         "novartis": "novartis.com",
@@ -54,7 +45,6 @@ class EmailGenerator:
         "insphero": "insphero.com"
     }
     
-    # University patterns
     UNIVERSITY_PATTERNS = [
         (r"university of (\w+)", "{}.edu"),
         (r"(\w+) university", "{}.edu"),
@@ -66,11 +56,9 @@ class EmailGenerator:
         pass
     
     def _parse_name(self, name):
-        """Parse name into first and last"""
         if not name:
             return None, None
         
-        # Remove titles
         name = name.lower()
         for title in ["dr.", "dr", "prof.", "prof", "mr.", "mrs.", "ms.", "phd", "md"]:
             name = name.replace(title, "")
@@ -84,33 +72,27 @@ class EmailGenerator:
         first = parts[0]
         last = parts[-1]
         
-        # Remove non-alpha characters
         first = re.sub(r'[^a-z]', '', first)
         last = re.sub(r'[^a-z]', '', last)
         
         return first, last
     
     def _get_domain(self, company):
-        """Get domain from company name"""
         if not company:
             return None
         
         company_lower = company.lower()
         
-        # Check known domains
         for key, domain in self.KNOWN_DOMAINS.items():
             if key in company_lower:
                 return domain
         
-        # Check university patterns
         for pattern, domain_format in self.UNIVERSITY_PATTERNS:
             match = re.search(pattern, company_lower)
             if match:
                 uni_name = match.group(1)
                 return domain_format.format(uni_name)
         
-        # Generate domain from company name
-        # Take first word, remove special chars
         words = company_lower.split()
         if words:
             base = re.sub(r'[^a-z0-9]', '', words[0])
@@ -120,9 +102,6 @@ class EmailGenerator:
         return None
     
     def generate_email(self, name, company, existing_email=""):
-        """Generate probable email address"""
-        
-        # If already have email, return it
         if existing_email and "@" in existing_email:
             return existing_email
         
@@ -134,14 +113,11 @@ class EmailGenerator:
         if not domain:
             return ""
         
-        # Use most common pattern
         email = f"{first}.{last}@{domain}"
         
         return email
     
     def enrich_leads(self, leads):
-        """Add generated emails to leads"""
-        
         print("\n[Email] Generating email addresses...")
         
         generated = 0
@@ -157,21 +133,3 @@ class EmailGenerator:
         
         print(f"[Email] ✓ Generated {generated} email addresses")
         return leads
-
-
-# Test
-if __name__ == "__main__":
-    gen = EmailGenerator()
-    
-    test_cases = [
-        ("Dr. John Smith", "Pfizer Inc"),
-        ("Sarah Johnson", "Harvard University"),
-        ("Michael Chen", "University of California"),
-        ("Emma Williams", "Emulate Bio"),
-        ("James Brown", "NIH")
-    ]
-    
-    print("Email generation test:")
-    for name, company in test_cases:
-        email = gen.generate_email(name, company)
-        print(f"  {name} @ {company} -> {email}")

@@ -1,12 +1,5 @@
-"""
-Google Scholar Crawler - FREE (with rate limiting)
-Uses scholarly library to search Google Scholar
-Note: Google may block if too many requests - use carefully
-"""
-
 import time
 
-# Try to import scholarly, but handle if not installed
 try:
     from scholarly import scholarly
     SCHOLARLY_AVAILABLE = True
@@ -15,14 +8,10 @@ except ImportError:
     print("[Google Scholar] scholarly library not installed. Run: pip install scholarly")
 
 class GoogleScholarCrawler:
-    """Crawls Google Scholar for authors (use sparingly - rate limited)"""
-    
     def __init__(self):
         self.leads = []
     
     def search_authors(self, keywords, max_results=20):
-        """Search for authors by keyword"""
-        
         if not SCHOLARLY_AVAILABLE:
             print("[Google Scholar] Skipping - scholarly library not available")
             return []
@@ -32,7 +21,6 @@ class GoogleScholarCrawler:
         leads = []
         
         try:
-            # Search for publications first
             query = " ".join(keywords[:3])
             search_query = scholarly.search_pubs(query)
             
@@ -41,10 +29,9 @@ class GoogleScholarCrawler:
                 if count >= max_results:
                     break
                 
-                time.sleep(3)  # Important: rate limiting to avoid being blocked
+                time.sleep(3)
                 
                 try:
-                    # Get publication details
                     bib = pub.get("bib", {})
                     
                     title = bib.get("title", "")
@@ -52,7 +39,6 @@ class GoogleScholarCrawler:
                     year = bib.get("pub_year", "")
                     venue = bib.get("venue", "")
                     
-                    # Get first author
                     if isinstance(authors, str):
                         author_list = [a.strip() for a in authors.split(" and ")]
                     elif isinstance(authors, list):
@@ -65,7 +51,6 @@ class GoogleScholarCrawler:
                     
                     name = author_list[0]
                     
-                    # Check for in-vitro keywords
                     full_text = f"{title} {venue}".lower()
                     invitro_keywords = ["3d", "in vitro", "organ-on-chip", "spheroid"]
                     uses_invitro = any(kw in full_text for kw in invitro_keywords)
@@ -100,17 +85,5 @@ class GoogleScholarCrawler:
         return leads
     
     def crawl(self, keywords, max_results=20):
-        """Main crawl method"""
         self.leads = self.search_authors(keywords, max_results)
         return self.leads
-
-
-# Test
-if __name__ == "__main__":
-    crawler = GoogleScholarCrawler()
-    keywords = ["drug-induced liver injury", "hepatotoxicity"]
-    leads = crawler.crawl(keywords, max_results=5)
-    
-    print(f"\nFound {len(leads)} leads:")
-    for lead in leads[:3]:
-        print(f"  - {lead['name']}")

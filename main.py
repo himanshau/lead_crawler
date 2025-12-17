@@ -1,25 +1,4 @@
 #!/usr/bin/env python3
-"""
-==============================================
-3D IN-VITRO MODELS LEAD GENERATOR
-Complete Web Crawler - NO API KEYS REQUIRED
-==============================================
-
-This script crawls FREE public data sources:
-- PubMed (scientific publications)
-- NIH RePORTER (grant database)
-- Europe PMC (European publications)
-- ClinicalTrials.gov (clinical trials)
-- Google Scholar (optional, rate limited)
-
-Output: CSV and Excel files with ranked leads
-
-Usage:
-    python main.py
-    
-    or with options:
-    python main.py --max-results 100 --skip-scholar
-"""
 
 import os
 import sys
@@ -28,11 +7,9 @@ import pandas as pd
 from datetime import datetime
 from pathlib import Path
 
-# Configuration
 OUTPUT_DIR = "output"
-YOUR_EMAIL = "student@university.edu"  # Change this to your email
+YOUR_EMAIL = "student@university.edu"
 
-# Keywords to search
 RESEARCH_KEYWORDS = [
     "drug-induced liver injury",
     "hepatotoxicity in vitro",
@@ -44,11 +21,9 @@ RESEARCH_KEYWORDS = [
 ]
 
 def create_output_dir():
-    """Create output directory"""
     Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 def crawl_pubmed(keywords, max_results):
-    """Crawl PubMed"""
     from crawlers.pubmed_crawler import PubMedCrawler
     
     try:
@@ -59,7 +34,6 @@ def crawl_pubmed(keywords, max_results):
         return []
 
 def crawl_nih(keywords, max_results):
-    """Crawl NIH RePORTER"""
     from crawlers.nih_crawler import NIHReporterCrawler
     
     try:
@@ -70,7 +44,6 @@ def crawl_nih(keywords, max_results):
         return []
 
 def crawl_europe_pmc(keywords, max_results):
-    """Crawl Europe PMC"""
     from crawlers.europe_pmc_crawler import EuropePMCCrawler
     
     try:
@@ -81,7 +54,6 @@ def crawl_europe_pmc(keywords, max_results):
         return []
 
 def crawl_clinical_trials(keywords, max_results):
-    """Crawl ClinicalTrials.gov"""
     from crawlers.clinical_trials_crawler import ClinicalTrialsCrawler
     
     try:
@@ -92,7 +64,6 @@ def crawl_clinical_trials(keywords, max_results):
         return []
 
 def crawl_google_scholar(keywords, max_results):
-    """Crawl Google Scholar (optional)"""
     from crawlers.google_scholar_crawler import GoogleScholarCrawler
     
     try:
@@ -103,7 +74,6 @@ def crawl_google_scholar(keywords, max_results):
         return []
 
 def enrich_emails(leads):
-    """Add email addresses to leads"""
     from crawlers.email_generator import EmailGenerator
     
     try:
@@ -114,7 +84,6 @@ def enrich_emails(leads):
         return leads
 
 def score_leads(leads):
-    """Score and rank leads"""
     from scoring.probability_engine import ProbabilityEngine
     
     try:
@@ -125,7 +94,6 @@ def score_leads(leads):
         return leads
 
 def remove_duplicates(leads):
-    """Remove duplicate leads based on name + company"""
     print("\n[Dedup] Removing duplicates...")
     
     seen = set()
@@ -143,10 +111,8 @@ def remove_duplicates(leads):
     return unique_leads
 
 def save_to_csv(leads, filename):
-    """Save leads to CSV"""
     df = pd.DataFrame(leads)
     
-    # Reorder columns to match expected format
     columns = [
         "name", "title", "company", "person_location", "company_hq",
         "funding_stage", "publication_topic", "publication_year",
@@ -154,15 +120,12 @@ def save_to_csv(leads, filename):
         "probability_score", "rank"
     ]
     
-    # Add missing columns
     for col in columns:
         if col not in df.columns:
             df[col] = ""
     
-    # Reorder
     df = df[columns]
     
-    # Save
     filepath = os.path.join(OUTPUT_DIR, f"{filename}.csv")
     df.to_csv(filepath, index=False)
     print(f"\n✓ Saved CSV: {filepath}")
@@ -170,10 +133,8 @@ def save_to_csv(leads, filename):
     return filepath
 
 def save_to_excel(leads, filename):
-    """Save leads to Excel"""
     df = pd.DataFrame(leads)
     
-    # Reorder columns
     columns = [
         "name", "title", "company", "person_location", "company_hq",
         "funding_stage", "publication_topic", "publication_year",
@@ -187,7 +148,6 @@ def save_to_excel(leads, filename):
     
     df = df[columns]
     
-    # Save
     filepath = os.path.join(OUTPUT_DIR, f"{filename}.xlsx")
     df.to_excel(filepath, index=False, sheet_name="Leads")
     print(f"✓ Saved Excel: {filepath}")
@@ -195,7 +155,6 @@ def save_to_excel(leads, filename):
     return filepath
 
 def print_summary(leads):
-    """Print summary statistics"""
     print("\n" + "=" * 60)
     print("SUMMARY")
     print("=" * 60)
@@ -209,7 +168,6 @@ def print_summary(leads):
         print(f"Medium (40-69): {sum(1 for s in scores if 40 <= s < 70)}")
         print(f"Low (<40): {sum(1 for s in scores if s < 40)}")
         
-        # Source breakdown
         sources = {}
         for lead in leads:
             src = lead.get("source", "Unknown")
@@ -219,22 +177,17 @@ def print_summary(leads):
         for src, count in sorted(sources.items(), key=lambda x: -x[1]):
             print(f"  {src}: {count}")
         
-        # Top leads
         print("\nTop 5 leads:")
         for lead in leads[:5]:
             print(f"  #{lead.get('rank', '?')} ({lead.get('probability_score', 0)}) {lead.get('name', 'Unknown')} - {lead.get('company', 'Unknown')[:30]}")
 
 def main():
-    """Main function"""
-    
-    # Parse arguments
     parser = argparse.ArgumentParser(description="3D In-Vitro Lead Generator")
     parser.add_argument("--max-results", type=int, default=50, help="Max results per source")
     parser.add_argument("--skip-scholar", action="store_true", help="Skip Google Scholar (faster)")
     parser.add_argument("--output-name", type=str, default=None, help="Output filename")
     args = parser.parse_args()
     
-    # Banner
     print("=" * 60)
     print("🔬 3D IN-VITRO MODELS LEAD GENERATOR")
     print("   Web Crawler - NO API KEYS REQUIRED")
@@ -243,37 +196,30 @@ def main():
     print(f"Max results per source: {args.max_results}")
     print("=" * 60)
     
-    # Create output directory
     create_output_dir()
     
-    # Collect all leads
     all_leads = []
     
-    # 1. PubMed
     print("\n📚 SOURCE 1: PubMed (Scientific Publications)")
     print("-" * 40)
     pubmed_leads = crawl_pubmed(RESEARCH_KEYWORDS, args.max_results)
     all_leads.extend(pubmed_leads)
     
-    # 2. NIH RePORTER
     print("\n💰 SOURCE 2: NIH RePORTER (Grants)")
     print("-" * 40)
     nih_leads = crawl_nih(RESEARCH_KEYWORDS, args.max_results)
     all_leads.extend(nih_leads)
     
-    # 3. Europe PMC
     print("\n🇪🇺 SOURCE 3: Europe PMC (European Publications)")
     print("-" * 40)
     epmc_leads = crawl_europe_pmc(RESEARCH_KEYWORDS, args.max_results)
     all_leads.extend(epmc_leads)
     
-    # 4. ClinicalTrials.gov
     print("\n🏥 SOURCE 4: ClinicalTrials.gov")
     print("-" * 40)
     ct_leads = crawl_clinical_trials(RESEARCH_KEYWORDS, args.max_results)
     all_leads.extend(ct_leads)
     
-    # 5. Google Scholar (optional)
     if not args.skip_scholar:
         print("\n📖 SOURCE 5: Google Scholar (Optional - may be slow)")
         print("-" * 40)
@@ -282,33 +228,24 @@ def main():
     else:
         print("\n[Google Scholar] Skipped (use --skip-scholar=false to include)")
     
-    # Check if we got any leads
     if not all_leads:
         print("\n⚠️ No leads found! Check your internet connection or try different keywords.")
         return
     
     print(f"\n📊 Total raw leads collected: {len(all_leads)}")
     
-    # Remove duplicates
     all_leads = remove_duplicates(all_leads)
-    
-    # Enrich with emails
     all_leads = enrich_emails(all_leads)
-    
-    # Score and rank
     all_leads = score_leads(all_leads)
     
-    # Generate output filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = args.output_name or f"3d_invitro_leads_{timestamp}"
     
-    # Save outputs
     print("\n💾 SAVING OUTPUT FILES")
     print("-" * 40)
     csv_path = save_to_csv(all_leads, filename)
     excel_path = save_to_excel(all_leads, filename)
     
-    # Print summary
     print_summary(all_leads)
     
     print("\n" + "=" * 60)
