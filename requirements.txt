@@ -1,0 +1,9 @@
+pandas
+requests
+beautifulsoup4
+lxml
+openpyxl
+xlsxwriter
+tqdm
+fake-useragent
+scholarly
