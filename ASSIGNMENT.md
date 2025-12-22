@@ -29,7 +29,7 @@ Upon completing this assignment, you will have demonstrated ability to:
 
 #### a) **PubMed Crawler** (`crawlers/pubmed_crawler.py`)
 - **Purpose**: Search scientific publications from PubMed database
-- **Technology**: Uses NCBI E-utilities API
+- **Technology**: Uses NCBI Entrez Programming Utilities (E-utilities)
 - **Data Extracted**: Author names, affiliations, publication titles, years
 - **Challenge**: Requires email for API access, XML parsing
 
@@ -291,7 +291,7 @@ scholarly      # Unofficial Google Scholar scraping library
 ## 📖 Additional Resources
 
 ### APIs Used:
-- [NCBI E-utilities](https://www.ncbi.nlm.nih.gov/books/NBK25501/)
+- [NCBI Entrez Programming Utilities (E-utilities)](https://www.ncbi.nlm.nih.gov/books/NBK25501/)
 - [NIH RePORTER API](https://api.reporter.nih.gov/)
 - [Europe PMC REST API](https://europepmc.org/RestfulWebService)
 - [ClinicalTrials.gov API](https://clinicaltrials.gov/api/gui)
