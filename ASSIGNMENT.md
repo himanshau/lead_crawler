@@ -67,11 +67,12 @@ Upon completing this assignment, you will have demonstrated ability to:
 ### 3. Probability Scoring Engine (`scoring/probability_engine.py`)
 - **Purpose**: Score and rank leads based on relevance
 - **Scoring Factors** (configurable weights in `config.py`):
-  - **Title Match** (30%): Job title contains relevant keywords
-  - **Funding Stage** (20%): Has active research funding
-  - **Uses In-Vitro** (15%): Explicitly mentions in-vitro methods
-  - **Location Hub** (10%): Based in major research hub
-  - **Recent DILI Publication** (40%): Recent relevant publications
+  - **Title Match** (weight: 30): Job title contains relevant keywords
+  - **Funding Stage** (weight: 20): Has active research funding
+  - **Uses In-Vitro** (weight: 15): Explicitly mentions in-vitro methods
+  - **Location Hub** (weight: 10): Based in major research hub
+  - **Recent DILI Publication** (weight: 40): Recent relevant publications
+  - Note: Weights are normalized to produce a final score between 0-100
 - **Output**: Probability score (0-100) and ranking
 
 ### 4. Data Processing Pipeline
@@ -87,7 +88,7 @@ The main workflow (`main.py`) orchestrates:
 
 ### Key Configuration Parameters:
 ```python
-YOUR_EMAIL                 # Required for PubMed API
+YOUR_EMAIL                 # Required for NCBI E-utilities API access
 MAX_RESULTS_PER_SOURCE     # Default: 50
 REQUEST_DELAY              # Delay between requests (2 seconds)
 RESEARCH_KEYWORDS          # Keywords to search for
@@ -191,7 +192,7 @@ openpyxl       # Excel writing
 xlsxwriter     # Excel formatting
 tqdm           # Progress bars
 fake-useragent # User agent rotation
-scholarly      # Google Scholar API
+scholarly      # Unofficial Google Scholar scraping library
 ```
 
 ## 🎓 Key Concepts Demonstrated
